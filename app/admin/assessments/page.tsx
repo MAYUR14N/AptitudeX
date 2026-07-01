@@ -29,8 +29,8 @@ export default function AssessmentManagementPage() {
   const fetchCounts = useCallback(async () => {
     const res = await fetch('/api/questions/count');
     if (res.ok) {
-      const data = await res.json();
-      setCounts(data);
+      const result = await res.json();
+      setCounts(result.data || {});
     }
   }, []);
 
@@ -38,8 +38,8 @@ export default function AssessmentManagementPage() {
     setLoading(true);
     const res = await fetch('/api/assessments');
     if (res.ok) {
-      const data = await res.json();
-      setAssessments(data);
+      const result = await res.json();
+      setAssessments(result.data || []);
     }
     setLoading(false);
   }, []);
@@ -78,9 +78,9 @@ export default function AssessmentManagementPage() {
         randomize_questions: true, randomize_options: true
       });
       fetchAssessments();
-      alert(`Assessment created! Exam Code: ${data.exam_code}`);
+      alert(`Assessment created! Exam Code: ${data.data.exam_code}`);
     } else {
-      setCreationError(data.error);
+      setCreationError(data.message || 'Error creating assessment');
     }
   }
 

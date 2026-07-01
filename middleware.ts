@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { decrypt } from '@/lib/auth';
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const sessionToken = request.cookies.get('session')?.value;
@@ -33,12 +33,9 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // For API routes, add logging requested in Step 1
+  // For API routes, no extra logic needed here for now
   if (pathname.startsWith('/api')) {
-    console.log(`\n[API START] ${request.method} ${pathname}`);
-    const response = NextResponse.next();
-    console.log(`[API END] ${request.method} ${pathname} - Status: ${response.status}`);
-    return response;
+    return NextResponse.next();
   }
 
   return NextResponse.next();

@@ -61,10 +61,8 @@ export default function ExamSessionPage() {
 
   const recordViolation = useCallback((type: string) => {
     if (isSubmitting.current) return;
-    violationCount.current += 1;
-    setViolations(prev => [...prev, type]);
 
-    // Send violation to backend
+    // Send violation to backend and handle response
     fetch('/api/exam/violation', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -73,14 +71,30 @@ export default function ExamSessionPage() {
         violationType: type,
         timestamp: new Date().toISOString()
       })
-    }).catch(console.error);
-
-    if (violationCount.current >= 3) {
-      alert('Warning: Suspicious activity detected. Further violations will terminate the exam. (Violation 3/3 - Exam Terminated)');
-      autoSubmit();
-    } else {
-      alert(`Warning: Suspicious activity detected. Further violations will terminate the exam. (Violation ${violationCount.current}/3)`);
-    }
+    })
+    .then(async (res) => {
+      if (res.ok) {
+        const result = await res.json();
+        if (result.success && result.data) {
+          if (result.data.message === 'Duplicate violation ignored') {
+            console.log('Duplicate violation ignored by server');
+            return;
+          }
+          
+          const count = result.data.violationCount;
+          setViolations(prev => [...prev, type]);
+          violationCount.current = count;
+          
+          if (result.data.terminated) {
+            alert('Suspicious activity detected. Exam terminated due to multiple violations. (Violation 3/3)');
+            autoSubmit();
+          } else {
+            alert(`Warning: Suspicious activity detected. Further violations will terminate the exam. (Violation ${count}/3)`);
+          }
+        }
+      }
+    })
+    .catch(console.error);
   }, [assessmentId, autoSubmit]);
 
   const fetchExamData = useCallback(async () => {
@@ -164,8 +178,8 @@ export default function ExamSessionPage() {
         e.preventDefault();
         recordViolation('dev_tools');
       }
-      // Ctrl+Shift+I or Ctrl+Shift+J
-      if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j')) {
+      // Ctrl+Shift+I or Ctrl+Shift+J or Ctrl+Shift+C
+      if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c')) {
         e.preventDefault();
         recordViolation('dev_tools');
       }

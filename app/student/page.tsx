@@ -1,6 +1,6 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 interface Result {
   id: number;
@@ -11,9 +11,10 @@ interface Result {
   time_taken: number;
 }
 
-export default function StudentDashboardPage() {
+function StudentDashboardContent() {
   const router = useRouter();
-  const [examCode, setExamCode] = useState('');
+  const searchParams = useSearchParams();
+  const [examCode, setExamCode] = useState(searchParams.get('code')?.toUpperCase() || '');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<Result[]>([]);
@@ -23,8 +24,9 @@ export default function StudentDashboardPage() {
     async function fetchResults() {
       const res = await fetch('/api/student/results');
       if (res.ok) {
-        const data = await res.json();
-        setResults(data.results || []);
+        const result = await res.json();
+        // Backend returns `{ success: true, data: { results: [...] } }` now
+        setResults(result.data?.results || []);
       }
       setLoadingResults(false);
     }
@@ -47,9 +49,9 @@ export default function StudentDashboardPage() {
     const data = await res.json();
 
     if (res.ok) {
-      router.push(`/exam/${data.assessmentId}`);
+      router.push(`/exam/${data.data.assessmentId}`);
     } else {
-      setError(data.error || 'Invalid exam code');
+      setError(data.message || 'Invalid exam code');
       setLoading(false);
     }
   }
@@ -94,7 +96,7 @@ export default function StudentDashboardPage() {
         
         {loadingResults ? (
           <div className="card" style={{ padding: '1.5rem', textAlign: 'center', color: 'var(--text-muted)' }}>Loading results...</div>
-        ) : results.length === 0 ? (
+        ) : !Array.isArray(results) || results.length === 0 ? (
           <div className="card" style={{ padding: '1.5rem', textAlign: 'center', color: 'var(--text-muted)' }}>
             <p>You haven&apos;t completed any assessments yet, or results are not published.</p>
           </div>
@@ -122,3 +124,12 @@ export default function StudentDashboardPage() {
     </div>
   );
 }
+
+export default function StudentDashboardPage() {
+  return (
+    <Suspense fallback={<div style={{ textAlign: 'center', marginTop: '4rem', color: 'var(--text-muted)' }}>Loading dashboard...</div>}>
+      <StudentDashboardContent />
+    </Suspense>
+  );
+}
+

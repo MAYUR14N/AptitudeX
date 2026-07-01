@@ -20,8 +20,8 @@ export default function ResultsManagementPage() {
     setLoading(true);
     const res = await fetch('/api/admin/results');
     if (res.ok) {
-      const data = await res.json();
-      setAssessments(data);
+      const result = await res.json();
+      setAssessments(result.data || []);
     }
     setLoading(false);
   }, []);

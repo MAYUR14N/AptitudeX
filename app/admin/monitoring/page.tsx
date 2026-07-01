@@ -19,7 +19,7 @@ export default function ExamMonitoringPage() {
     const res = await fetch('/api/admin/monitoring');
     if (res.ok) {
       const data = await res.json();
-      setRecords(data);
+      setRecords(data.data || []);
     }
     if (showLoader) setLoading(false);
   }, []);
@@ -75,10 +75,22 @@ export default function ExamMonitoringPage() {
                       padding: '0.25rem 0.6rem', 
                       borderRadius: '4px', 
                       fontSize: '0.8rem',
-                      background: r.status === 'completed' ? 'rgba(3, 218, 198, 0.2)' : 'rgba(69, 162, 158, 0.2)',
-                      color: r.status === 'completed' ? 'var(--success)' : 'var(--primary-hover)'
+                      background: r.status === 'completed' 
+                        ? 'rgba(3, 218, 198, 0.2)' 
+                        : r.status === 'terminated'
+                          ? 'rgba(207, 102, 121, 0.2)'
+                          : 'rgba(69, 162, 158, 0.2)',
+                      color: r.status === 'completed' 
+                        ? 'var(--success)' 
+                        : r.status === 'terminated'
+                          ? 'var(--danger-hover)'
+                          : 'var(--primary-hover)'
                     }}>
-                      {r.status === 'completed' ? 'Completed' : 'In Progress'}
+                      {r.status === 'completed' 
+                        ? 'Completed' 
+                        : r.status === 'terminated'
+                          ? 'Terminated'
+                          : 'In Progress'}
                     </span>
                   </td>
                   <td style={{ padding: '1rem' }}>

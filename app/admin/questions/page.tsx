@@ -36,8 +36,8 @@ export default function QuestionBankPage() {
     setLoading(true);
     const res = await fetch('/api/questions');
     if (res.ok) {
-      const data = await res.json();
-      setQuestions(data);
+      const result = await res.json();
+      setQuestions(result.data || []);
     }
     setLoading(false);
   }, []);
